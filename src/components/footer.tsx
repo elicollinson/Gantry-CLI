@@ -30,6 +30,7 @@ export function Footer({ view }: { view: ViewMode }) {
       { k: "\u2191\u2193", label: "Scroll" },
       { k: "e", label: "Edit" },
       { k: "x", label: "Run" },
+      { k: "t", label: "Tail" },
       { k: "r", label: "Refresh" },
       { k: "q", label: "Quit" },
     ],
@@ -37,6 +38,12 @@ export function Footer({ view }: { view: ViewMode }) {
       { k: "esc", label: "Cancel" },
       { k: "tab", label: "Mode" },
       { k: "\u21B5", label: "Confirm" },
+    ],
+    tail: [
+      { k: "esc", label: "Back" },
+      { k: "p", label: "Pause" },
+      { k: "\u2191\u2193", label: "Scroll" },
+      { k: "q", label: "Quit" },
     ],
     settings: [
       { k: "esc", label: "Back" },

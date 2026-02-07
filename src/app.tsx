@@ -12,6 +12,8 @@ import { JobDetail } from "./components/job-detail.tsx";
 import { ScheduleEditor } from "./components/schedule-editor.tsx";
 import { SettingsView } from "./components/settings-view.tsx";
 import { Loading } from "./components/loading.tsx";
+import { LiveTailViewer } from "./components/live-tail-viewer.tsx";
+import { useLogTail } from "./hooks/use-log-tail.ts";
 import { runService } from "./data/run-service.ts";
 
 export function App() {
@@ -32,6 +34,9 @@ export function App() {
   const [runConfirm, setRunConfirm] = useState(false);
   const [runPhase, setRunPhase] = useState<"idle" | "running" | "success" | "error">("idle");
   const [runError, setRunError] = useState<string | undefined>();
+  const [tailLogPath, setTailLogPath] = useState<string | null>(null);
+  const [tailJobLabel, setTailJobLabel] = useState("");
+  const [tailPaused, setTailPaused] = useState(false);
 
   // Clamp selectedIndex when filteredJobs changes
   useEffect(() => {
@@ -41,6 +46,26 @@ export function App() {
   }, [filteredJobs.length]);
 
   const selectedJob = filteredJobs[selectedIndex];
+
+  const { lines: tailLines, isStreaming: tailStreaming, error: tailError } = useLogTail(tailLogPath, view === "tail");
+
+  // Auto-transition from run success to tail view
+  useEffect(() => {
+    if (runPhase !== "success" || !selectedJob) return;
+    const logPath = selectedJob.logPaths.stdout ?? selectedJob.logPaths.stderr;
+    if (!logPath) return;
+
+    const timer = setTimeout(() => {
+      setTailLogPath(logPath);
+      setTailJobLabel(selectedJob.label);
+      setTailPaused(false);
+      setRunPhase("idle");
+      setRunError(undefined);
+      setView("tail");
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [runPhase, selectedJob]);
 
   const handleSearchChange = useCallback(
     (text: string) => {
@@ -79,12 +104,52 @@ export function App() {
 
       // Always handle Escape
       if (key.escape) {
+        if (view === "tail") {
+          setTailLogPath(null);
+          setTailPaused(false);
+          setView("detail");
+          return;
+        }
         if (isSearchFocused) {
           setIsSearchFocused(false);
           return;
         }
         if (view === "detail") {
           setView("list");
+          return;
+        }
+      }
+
+      // Tail view keys
+      if (view === "tail") {
+        if (input === "p") {
+          setTailPaused((prev) => !prev);
+          return;
+        }
+        if (input === "q") {
+          exit();
+          return;
+        }
+        return;
+      }
+
+      // List navigation works even when search is focused
+      if (view === "list") {
+        if (key.upArrow) {
+          setSelectedIndex((prev) => Math.max(0, prev - 1));
+          return;
+        }
+        if (key.downArrow) {
+          setSelectedIndex((prev) =>
+            Math.min(filteredJobs.length - 1, prev + 1)
+          );
+          return;
+        }
+        if (key.return) {
+          if (filteredJobs.length > 0) {
+            setIsSearchFocused(false);
+            setView("detail");
+          }
           return;
         }
       }
@@ -130,23 +195,15 @@ export function App() {
         return;
       }
 
-      if (view === "list") {
-        if (key.upArrow) {
-          setSelectedIndex((prev) => Math.max(0, prev - 1));
-          return;
+      if (view === "detail" && input === "t" && selectedJob) {
+        const logPath = selectedJob.logPaths.stdout ?? selectedJob.logPaths.stderr;
+        if (logPath) {
+          setTailLogPath(logPath);
+          setTailJobLabel(selectedJob.label);
+          setTailPaused(false);
+          setView("tail");
         }
-        if (key.downArrow) {
-          setSelectedIndex((prev) =>
-            Math.min(filteredJobs.length - 1, prev + 1)
-          );
-          return;
-        }
-        if (key.return) {
-          if (filteredJobs.length > 0) {
-            setView("detail");
-          }
-          return;
-        }
+        return;
       }
     },
     { isActive: view !== "edit" && view !== "settings" },
@@ -189,6 +246,16 @@ export function App() {
             setEditingJob(null);
             refresh();
           }}
+        />
+      )}
+      {view === "tail" && tailLogPath && (
+        <LiveTailViewer
+          jobLabel={tailJobLabel}
+          logPath={tailLogPath}
+          lines={tailLines}
+          isStreaming={tailStreaming}
+          error={tailError}
+          isPaused={tailPaused}
         />
       )}
       {view === "settings" && config && (
