@@ -3,12 +3,14 @@ import { Box, useInput, useApp } from "ink";
 import type { ViewMode, LaunchJob } from "./types.ts";
 import { useJobs } from "./hooks/use-jobs.ts";
 import { useFilter } from "./hooks/use-filter.ts";
+import { useConfig } from "./hooks/use-config.ts";
 import { Header } from "./components/header.tsx";
 import { Footer } from "./components/footer.tsx";
 import { FilterBar } from "./components/filter-bar.tsx";
 import { JobList } from "./components/job-list.tsx";
 import { JobDetail } from "./components/job-detail.tsx";
 import { ScheduleEditor } from "./components/schedule-editor.tsx";
+import { SettingsView } from "./components/settings-view.tsx";
 import { Loading } from "./components/loading.tsx";
 
 export function App() {
@@ -19,6 +21,7 @@ export function App() {
     setSearchText,
     toggleAppleServices,
   } = useFilter(jobs);
+  const { config, updateConfig } = useConfig();
   const { exit } = useApp();
 
   const [view, setView] = useState<ViewMode>("list");
@@ -81,6 +84,11 @@ export function App() {
         return;
       }
 
+      if (input === "s" && view === "list") {
+        setView("settings");
+        return;
+      }
+
       if (view === "detail" && input === "e" && selectedJob?.source === "user") {
         setEditingJob(selectedJob);
         setView("edit");
@@ -106,7 +114,7 @@ export function App() {
         }
       }
     },
-    { isActive: view !== "edit" },
+    { isActive: view !== "edit" && view !== "settings" },
   );
 
   if (loading && jobs.length === 0) {
@@ -135,16 +143,24 @@ export function App() {
         </>
       )}
       {view === "detail" && selectedJob && (
-        <JobDetail job={selectedJob} />
+        <JobDetail job={selectedJob} config={config} />
       )}
       {view === "edit" && editingJob && (
         <ScheduleEditor
           job={editingJob}
+          config={config}
           onDone={() => {
             setView("detail");
             setEditingJob(null);
             refresh();
           }}
+        />
+      )}
+      {view === "settings" && config && (
+        <SettingsView
+          config={config}
+          onUpdateConfig={updateConfig}
+          onClose={() => setView("list")}
         />
       )}
       <Footer view={view} />

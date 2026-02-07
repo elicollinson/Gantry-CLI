@@ -6,6 +6,7 @@ import { humanizeSchedule } from "./humanize.ts";
 export { nextRunFromCalendarIntervals, nextRunFromCalendarInterval } from "./calendar-interval.ts";
 export { nextRunFromStartInterval } from "./start-interval.ts";
 export { humanizeSchedule, formatTime12h } from "./humanize.ts";
+export { computePreview } from "./preview.ts";
 
 /**
  * Computes a unified Schedule object for a given plist configuration.

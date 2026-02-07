@@ -2,8 +2,10 @@ import React, { useCallback } from "react";
 import { Box, Text, useInput, useStdout } from "ink";
 import { TextInput, Spinner } from "@inkjs/ui";
 import type { LaunchJob } from "../types.ts";
+import type { GantryConfig } from "../config/types.ts";
 import { useEditSchedule } from "../hooks/use-edit-schedule.ts";
 import { formatRelativeTime } from "../utils/format.ts";
+import { AVAILABLE_MODELS } from "../config/models.ts";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -16,15 +18,24 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function isLLMConfigured(config: GantryConfig | null): boolean {
+  if (!config?.llm.selectedModel) return false;
+  const model = AVAILABLE_MODELS.find((m) => m.id === config.llm.selectedModel);
+  if (!model) return false;
+  return Boolean(config.llm.apiKeys[model.provider]);
+}
+
 export function ScheduleEditor({
   job,
+  config,
   onDone,
 }: {
   job: LaunchJob;
+  config: GantryConfig | null;
   onDone: () => void;
 }) {
-  const { editState, setInputText, toggleInputMode, confirm, apply, cancel } =
-    useEditSchedule(job);
+  const { editState, llmLoading, setInputText, toggleInputMode, confirm, apply, cancel } =
+    useEditSchedule(job, config);
 
   const handleDone = useCallback(() => {
     cancel();
@@ -150,8 +161,13 @@ export function ScheduleEditor({
   }
 
   // Input phase
+  const hasAI = isLLMConfigured(config);
   const modeLabel =
-    editState.inputMode === "natural" ? "Natural language" : "Cron expression";
+    editState.inputMode === "natural"
+      ? hasAI
+        ? "Natural language (AI)"
+        : "Natural language"
+      : "Cron expression";
 
   const placeholder =
     editState.inputMode === "natural"
@@ -183,6 +199,14 @@ export function ScheduleEditor({
           onChange={setInputText}
         />
       </Box>
+
+      {/* AI loading indicator */}
+      {llmLoading && (
+        <Box marginTop={0}>
+          <Box width={14}><Text> </Text></Box>
+          <Spinner label="AI parsing..." />
+        </Box>
+      )}
 
       {/* Live preview */}
       {editState.parseResult && (

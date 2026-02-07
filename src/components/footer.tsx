@@ -21,6 +21,7 @@ export function Footer({ view }: { view: ViewMode }) {
       { k: "\u21B5", label: "Detail" },
       { k: "/", label: "Search" },
       { k: "a", label: "Apple" },
+      { k: "s", label: "Settings" },
       { k: "r", label: "Refresh" },
       { k: "q", label: "Quit" },
     ],
@@ -35,6 +36,12 @@ export function Footer({ view }: { view: ViewMode }) {
       { k: "esc", label: "Cancel" },
       { k: "tab", label: "Mode" },
       { k: "\u21B5", label: "Confirm" },
+    ],
+    settings: [
+      { k: "esc", label: "Back" },
+      { k: "\u2191\u2193", label: "Navigate" },
+      { k: "tab", label: "Section" },
+      { k: "\u21B5", label: "Select" },
     ],
   };
   const keys = keyMap[view];

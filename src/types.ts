@@ -113,4 +113,4 @@ export interface EditState {
 }
 
 // ---- App view state ----
-export type ViewMode = "list" | "detail" | "edit";
+export type ViewMode = "list" | "detail" | "edit" | "settings";

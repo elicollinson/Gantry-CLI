@@ -1,7 +1,10 @@
 import React from "react";
 import { Box, Text, useStdout } from "ink";
+import { Spinner } from "@inkjs/ui";
 import type { LaunchJob } from "../types.ts";
+import type { GantryConfig } from "../config/types.ts";
 import { useJobDetail } from "../hooks/use-job-detail.ts";
+import { useLogSummary } from "../hooks/use-log-summary.ts";
 import { StatusBadge } from "./status-badge.tsx";
 import { LogViewer } from "./log-viewer.tsx";
 import { formatRelativeTime } from "../utils/format.ts";
@@ -26,8 +29,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function JobDetail({ job }: { job: LaunchJob }) {
+export function JobDetail({ job, config }: { job: LaunchJob; config: GantryConfig | null }) {
   const { printInfo, logContent, loading } = useJobDetail(job.label);
+  const { summary, loading: summaryLoading } = useLogSummary(job.label, logContent, config);
   const { stdout } = useStdout();
   const width = stdout.columns ?? 80;
 
@@ -105,6 +109,20 @@ export function JobDetail({ job }: { job: LaunchJob }) {
             : "\u2014"}
         </Text>
       </Field>
+
+      {/* AI Summary Section */}
+      {(summary || summaryLoading) && (
+        <>
+          <SectionHeader title="AI Summary" />
+          {summaryLoading ? (
+            <Spinner label="Generating summary..." />
+          ) : (
+            <Box paddingLeft={0}>
+              <Text wrap="wrap">{summary}</Text>
+            </Box>
+          )}
+        </>
+      )}
 
       {/* Logs Section */}
       <SectionHeader title="Logs" />
