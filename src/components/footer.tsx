@@ -15,22 +15,29 @@ export function Footer({ view }: { view: ViewMode }) {
   const { stdout } = useStdout();
   const width = stdout.columns ?? 80;
 
-  const keys =
-    view === "list"
-      ? [
-          { k: "\u2191\u2193", label: "Navigate" },
-          { k: "\u21B5", label: "Detail" },
-          { k: "/", label: "Search" },
-          { k: "a", label: "Apple" },
-          { k: "r", label: "Refresh" },
-          { k: "q", label: "Quit" },
-        ]
-      : [
-          { k: "esc", label: "Back" },
-          { k: "\u2191\u2193", label: "Scroll" },
-          { k: "r", label: "Refresh" },
-          { k: "q", label: "Quit" },
-        ];
+  const keyMap: Record<ViewMode, { k: string; label: string }[]> = {
+    list: [
+      { k: "\u2191\u2193", label: "Navigate" },
+      { k: "\u21B5", label: "Detail" },
+      { k: "/", label: "Search" },
+      { k: "a", label: "Apple" },
+      { k: "r", label: "Refresh" },
+      { k: "q", label: "Quit" },
+    ],
+    detail: [
+      { k: "esc", label: "Back" },
+      { k: "\u2191\u2193", label: "Scroll" },
+      { k: "e", label: "Edit" },
+      { k: "r", label: "Refresh" },
+      { k: "q", label: "Quit" },
+    ],
+    edit: [
+      { k: "esc", label: "Cancel" },
+      { k: "tab", label: "Mode" },
+      { k: "\u21B5", label: "Confirm" },
+    ],
+  };
+  const keys = keyMap[view];
 
   return (
     <Box flexDirection="column">

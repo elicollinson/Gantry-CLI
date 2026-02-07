@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Box, useInput, useApp } from "ink";
-import type { ViewMode } from "./types.ts";
+import type { ViewMode, LaunchJob } from "./types.ts";
 import { useJobs } from "./hooks/use-jobs.ts";
 import { useFilter } from "./hooks/use-filter.ts";
 import { Header } from "./components/header.tsx";
@@ -8,6 +8,7 @@ import { Footer } from "./components/footer.tsx";
 import { FilterBar } from "./components/filter-bar.tsx";
 import { JobList } from "./components/job-list.tsx";
 import { JobDetail } from "./components/job-detail.tsx";
+import { ScheduleEditor } from "./components/schedule-editor.tsx";
 import { Loading } from "./components/loading.tsx";
 
 export function App() {
@@ -23,6 +24,7 @@ export function App() {
   const [view, setView] = useState<ViewMode>("list");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [editingJob, setEditingJob] = useState<LaunchJob | null>(null);
 
   // Clamp selectedIndex when filteredJobs changes
   useEffect(() => {
@@ -30,6 +32,8 @@ export function App() {
       Math.max(0, Math.min(prev, filteredJobs.length - 1))
     );
   }, [filteredJobs.length]);
+
+  const selectedJob = filteredJobs[selectedIndex];
 
   const handleSearchChange = useCallback(
     (text: string) => {
@@ -77,6 +81,12 @@ export function App() {
         return;
       }
 
+      if (view === "detail" && input === "e" && selectedJob?.source === "user") {
+        setEditingJob(selectedJob);
+        setView("edit");
+        return;
+      }
+
       if (view === "list") {
         if (key.upArrow) {
           setSelectedIndex((prev) => Math.max(0, prev - 1));
@@ -96,13 +106,13 @@ export function App() {
         }
       }
     },
+    { isActive: view !== "edit" },
   );
 
   if (loading && jobs.length === 0) {
     return <Loading />;
   }
 
-  const selectedJob = filteredJobs[selectedIndex];
   const runningCount = filteredJobs.filter((j) => j.isRunning).length;
   const errorCount = filteredJobs.filter((j) => j.health === "error").length;
 
@@ -126,6 +136,16 @@ export function App() {
       )}
       {view === "detail" && selectedJob && (
         <JobDetail job={selectedJob} />
+      )}
+      {view === "edit" && editingJob && (
+        <ScheduleEditor
+          job={editingJob}
+          onDone={() => {
+            setView("detail");
+            setEditingJob(null);
+            refresh();
+          }}
+        />
       )}
       <Footer view={view} />
     </Box>

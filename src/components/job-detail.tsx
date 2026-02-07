@@ -94,6 +94,9 @@ export function JobDetail({ job }: { job: LaunchJob }) {
       </Field>
       <Field label="Schedule">
         <Text color="cyan">{job.schedule.humanReadable}</Text>
+        {job.source === "user" && (
+          <Text dimColor>  (press e to edit)</Text>
+        )}
       </Field>
       <Field label="Next Run">
         <Text color={job.schedule.nextRun ? "yellow" : undefined}>

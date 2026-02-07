@@ -85,5 +85,32 @@ export interface FilterState {
   sortDirection: SortDirection;
 }
 
+// ---- Schedule editing ----
+export type EditInputMode = "natural" | "cron";
+
+export type EditPhase = "input" | "confirm" | "applying" | "success" | "error";
+
+export interface ParsedSchedule {
+  type: "interval" | "calendar";
+  startInterval?: number;
+  calendarIntervals?: CalendarInterval[];
+}
+
+export interface ScheduleParseResult {
+  ok: boolean;
+  schedule?: ParsedSchedule;
+  humanReadable?: string;
+  nextRun?: Date | null;
+  error?: string;
+}
+
+export interface EditState {
+  phase: EditPhase;
+  inputMode: EditInputMode;
+  inputText: string;
+  parseResult: ScheduleParseResult | null;
+  errorMessage?: string;
+}
+
 // ---- App view state ----
-export type ViewMode = "list" | "detail";
+export type ViewMode = "list" | "detail" | "edit";
