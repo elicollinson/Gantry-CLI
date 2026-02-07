@@ -1,6 +1,6 @@
 {
   "name": "@elicollinson/gantry-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A TUI for visualizing macOS launchctl/launchd scheduled jobs",
   "type": "module",
   "bin": {
