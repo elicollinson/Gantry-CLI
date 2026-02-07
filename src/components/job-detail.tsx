@@ -29,7 +29,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-export function JobDetail({ job, config }: { job: LaunchJob; config: GantryConfig | null }) {
+interface JobDetailProps {
+  job: LaunchJob;
+  config: GantryConfig | null;
+  runConfirm: boolean;
+  runPhase: "idle" | "running" | "success" | "error";
+  runError?: string;
+}
+
+export function JobDetail({ job, config, runConfirm, runPhase, runError }: JobDetailProps) {
   const { printInfo, logContent, loading } = useJobDetail(job.label);
   const { summary, loading: summaryLoading } = useLogSummary(job.label, logContent, config);
   const { stdout } = useStdout();
@@ -130,6 +138,31 @@ export function JobDetail({ job, config }: { job: LaunchJob; config: GantryConfi
         <LogViewer content={logContent} path={logPath} loading={loading} />
       ) : (
         <Text dimColor italic> No log files configured</Text>
+      )}
+
+      {/* Run Job Overlay */}
+      {runConfirm && (
+        <Box marginTop={1}>
+          <Text bold color="yellow">Run {job.label} now? </Text>
+          <Text>y/n</Text>
+        </Box>
+      )}
+      {runPhase === "running" && (
+        <Box marginTop={1}>
+          <Spinner label="Running..." />
+        </Box>
+      )}
+      {runPhase === "success" && (
+        <Box marginTop={1}>
+          <Text bold color="green">Job triggered successfully</Text>
+          <Text dimColor>  (press any key)</Text>
+        </Box>
+      )}
+      {runPhase === "error" && (
+        <Box marginTop={1}>
+          <Text bold color="red">{runError ?? "Unknown error"}</Text>
+          <Text dimColor>  (press any key)</Text>
+        </Box>
       )}
     </Box>
   );

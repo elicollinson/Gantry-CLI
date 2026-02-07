@@ -29,6 +29,7 @@ export function Footer({ view }: { view: ViewMode }) {
       { k: "esc", label: "Back" },
       { k: "\u2191\u2193", label: "Scroll" },
       { k: "e", label: "Edit" },
+      { k: "x", label: "Run" },
       { k: "r", label: "Refresh" },
       { k: "q", label: "Quit" },
     ],

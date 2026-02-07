@@ -12,6 +12,7 @@ import { JobDetail } from "./components/job-detail.tsx";
 import { ScheduleEditor } from "./components/schedule-editor.tsx";
 import { SettingsView } from "./components/settings-view.tsx";
 import { Loading } from "./components/loading.tsx";
+import { runService } from "./data/run-service.ts";
 
 export function App() {
   const { jobs, loading, error, refresh } = useJobs();
@@ -28,6 +29,9 @@ export function App() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [editingJob, setEditingJob] = useState<LaunchJob | null>(null);
+  const [runConfirm, setRunConfirm] = useState(false);
+  const [runPhase, setRunPhase] = useState<"idle" | "running" | "success" | "error">("idle");
+  const [runError, setRunError] = useState<string | undefined>();
 
   // Clamp selectedIndex when filteredJobs changes
   useEffect(() => {
@@ -47,6 +51,32 @@ export function App() {
 
   useInput(
     (input, key) => {
+      // Handle run confirm/phase states in detail view
+      if (view === "detail") {
+        if (runPhase === "success" || runPhase === "error") {
+          setRunPhase("idle");
+          setRunError(undefined);
+          refresh();
+          return;
+        }
+
+        if (runConfirm) {
+          if (input === "y" && selectedJob) {
+            setRunConfirm(false);
+            setRunPhase("running");
+            runService(selectedJob.label)
+              .then(() => setRunPhase("success"))
+              .catch((err) => {
+                setRunError(err instanceof Error ? err.message : String(err));
+                setRunPhase("error");
+              });
+          } else if (input === "n" || key.escape) {
+            setRunConfirm(false);
+          }
+          return;
+        }
+      }
+
       // Always handle Escape
       if (key.escape) {
         if (isSearchFocused) {
@@ -92,6 +122,11 @@ export function App() {
       if (view === "detail" && input === "e" && selectedJob?.source === "user") {
         setEditingJob(selectedJob);
         setView("edit");
+        return;
+      }
+
+      if (view === "detail" && input === "x" && runPhase === "idle") {
+        setRunConfirm(true);
         return;
       }
 
@@ -143,7 +178,7 @@ export function App() {
         </>
       )}
       {view === "detail" && selectedJob && (
-        <JobDetail job={selectedJob} config={config} />
+        <JobDetail job={selectedJob} config={config} runConfirm={runConfirm} runPhase={runPhase} runError={runError} />
       )}
       {view === "edit" && editingJob && (
         <ScheduleEditor
