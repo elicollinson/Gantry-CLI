@@ -1,0 +1,28 @@
+{
+  "name": "gantry-cli",
+  "version": "0.1.0",
+  "description": "A TUI for visualizing macOS launchctl/launchd scheduled jobs",
+  "type": "module",
+  "bin": {
+    "gantry": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.tsx",
+    "build": "bun build --target=node ./src/cli.tsx --outfile=dist/cli.js",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "os": ["darwin"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^19.2.13",
+    "ink-testing-library": "^4.0.0",
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@inkjs/ui": "^2.0.0",
+    "ink": "^5",
+    "react": "^18"
+  }
+}
