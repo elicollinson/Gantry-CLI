@@ -1,10 +1,13 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+
+mkdirSync("./dist", { recursive: true });
 
 const result = await Bun.build({
   entrypoints: ["./src/cli.tsx"],
-  outfile: "./dist/cli.js",
+  outdir: "./dist",
   target: "node",
   external: ["react-devtools-core"],
+  naming: "cli.js",
 });
 
 if (!result.success) {
@@ -25,4 +28,4 @@ code = code.replace(
 );
 writeFileSync(outPath, code);
 
-console.log(`Built ${result.outputs[0]?.path}`);
+console.log(`Built ${outPath}`);
