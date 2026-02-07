@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { exec } from "../utils/exec.ts";
 import type { PrintInfo } from "../types.ts";
 
 /**
@@ -10,11 +10,11 @@ import type { PrintInfo } from "../types.ts";
 export async function getPrintInfo(label: string): Promise<PrintInfo | null> {
   try {
     const uid = process.getuid?.() ?? parseInt(
-      (await $`id -u`.text()).trim(),
+      (await exec("id", ["-u"])).trim(),
       10
     );
 
-    const result = await $`launchctl print gui/${uid}/${label}`.nothrow().text();
+    const result = await exec("launchctl", ["print", `gui/${uid}/${label}`], { nothrow: true });
 
     if (!result || result.includes("Could not find service")) {
       return null;

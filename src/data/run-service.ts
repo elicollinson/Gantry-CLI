@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { exec } from "../utils/exec.ts";
 
 /**
  * Runs a launchd job immediately using launchctl kickstart.
@@ -12,7 +12,7 @@ export async function runService(label: string): Promise<void> {
   const target = `gui/${uid}/${label}`;
 
   try {
-    await $`launchctl kickstart ${target}`;
+    await exec("launchctl", ["kickstart", target]);
   } catch (error) {
     throw new Error(
       `Failed to run service: ${error instanceof Error ? error.message : String(error)}`,

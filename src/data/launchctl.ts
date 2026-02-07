@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { exec } from "../utils/exec.ts";
 import type { LaunchctlListEntry } from "../types.ts";
 
 /**
@@ -11,7 +11,7 @@ import type { LaunchctlListEntry } from "../types.ts";
  */
 export async function listServices(): Promise<LaunchctlListEntry[]> {
   try {
-    const result = await $`launchctl list`.text();
+    const result = await exec("launchctl", ["list"]);
     const lines = result.trim().split("\n");
 
     // Skip the header line

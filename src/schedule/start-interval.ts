@@ -1,3 +1,5 @@
+import { stat } from "node:fs/promises";
+
 /**
  * Computes the next run time for a StartInterval-based launchd job.
  *
@@ -14,9 +16,8 @@ export async function nextRunFromStartInterval(
 
   if (logPath) {
     try {
-      const file = Bun.file(logPath);
-      const stat = await file.stat();
-      const mtime = stat.mtime;
+      const fileStat = await stat(logPath);
+      const mtime = fileStat.mtime;
 
       if (mtime) {
         const lastRanMs =

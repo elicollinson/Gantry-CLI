@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { exec } from "../utils/exec.ts";
 import type { PlistConfig } from "../types.ts";
 
 /**
@@ -7,7 +7,7 @@ import type { PlistConfig } from "../types.ts";
  */
 export async function parsePlist(plistPath: string): Promise<PlistConfig> {
   try {
-    const result = await $`plutil -convert json -o - ${plistPath}`.text();
+    const result = await exec("plutil", ["-convert", "json", "-o", "-", plistPath]);
     const parsed = JSON.parse(result) as PlistConfig;
     return parsed;
   } catch (error) {

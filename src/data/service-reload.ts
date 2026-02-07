@@ -1,4 +1,4 @@
-import { $ } from "bun";
+import { exec, sleep } from "../utils/exec.ts";
 
 /**
  * Reloads a launchd service after plist modification.
@@ -18,19 +18,19 @@ export async function reloadService(
 
   // Try modern bootout/bootstrap first
   try {
-    await $`launchctl bootout ${target}`.quiet().nothrow();
+    await exec("launchctl", ["bootout", target], { nothrow: true });
     // Brief pause to let launchd clean up
-    await Bun.sleep(500);
-    await $`launchctl bootstrap ${domain} ${plistPath}`;
+    await sleep(500);
+    await exec("launchctl", ["bootstrap", domain, plistPath]);
     return;
   } catch {
     // Fall back to legacy unload/load
   }
 
   try {
-    await $`launchctl unload ${plistPath}`.quiet().nothrow();
-    await Bun.sleep(500);
-    await $`launchctl load ${plistPath}`;
+    await exec("launchctl", ["unload", plistPath], { nothrow: true });
+    await sleep(500);
+    await exec("launchctl", ["load", plistPath]);
   } catch (error) {
     throw new Error(
       `Failed to reload service: ${error instanceof Error ? error.message : String(error)}`,

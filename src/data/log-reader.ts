@@ -1,5 +1,7 @@
+import { readFile, access } from "node:fs/promises";
+
 /**
- * Reads the last N lines of a log file using Bun.file().
+ * Reads the last N lines of a log file.
  * Returns null if the file doesn't exist or is unreadable (permission denied, etc.).
  */
 export async function readLogTail(
@@ -7,15 +9,9 @@ export async function readLogTail(
   lines: number = 50
 ): Promise<string | null> {
   try {
-    const file = Bun.file(logPath);
+    await access(logPath);
 
-    // Check if file exists
-    const exists = await file.exists();
-    if (!exists) {
-      return null;
-    }
-
-    const content = await file.text();
+    const content = await readFile(logPath, "utf-8");
 
     if (!content) {
       return "";
