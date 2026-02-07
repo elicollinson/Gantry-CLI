@@ -1,6 +1,6 @@
 {
   "name": "@elicollinson/gantry-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A TUI for visualizing macOS launchctl/launchd scheduled jobs",
   "type": "module",
   "bin": {
@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
-  "os": ["darwin"],
+  "os": [
+    "darwin"
+  ],
   "license": "MIT",
   "keywords": [
     "launchctl",
