@@ -3,6 +3,14 @@ import { Box, Text } from "ink";
 import { TextInput } from "@inkjs/ui";
 import type { FilterState } from "../types.ts";
 
+function Badge({ label, active }: { label: string; active: boolean }) {
+  return active ? (
+    <Text color="black" backgroundColor="yellow"> {label} </Text>
+  ) : (
+    <Text dimColor> {label} </Text>
+  );
+}
+
 export function FilterBar({
   filterState,
   onSearchChange,
@@ -14,45 +22,39 @@ export function FilterBar({
   onToggleApple: () => void;
   isSearchFocused: boolean;
 }) {
-  const appleLabel = filterState.showAppleServices
-    ? "Apple: shown"
-    : "Apple: hidden";
-
-  const healthLabel =
-    filterState.healthFilter !== "all"
-      ? `Health: ${filterState.healthFilter}`
-      : null;
-
-  const sourceLabel =
-    filterState.sourceFilter !== "all"
-      ? `Source: ${filterState.sourceFilter}`
-      : null;
+  const hasSearch = filterState.searchText.length > 0;
 
   return (
-    <Box>
-      <Box marginRight={2}>
+    <Box marginBottom={0} gap={1}>
+      <Box>
         {isSearchFocused ? (
           <Box>
-            <Text color="yellow">/ Search: </Text>
+            <Text color="yellow" bold>{"\u{1F50D}"} </Text>
             <TextInput
               placeholder="type to filter..."
               onChange={onSearchChange}
               defaultValue={filterState.searchText}
             />
           </Box>
-        ) : (
-          <Text dimColor>
-            / Search{filterState.searchText ? `: ${filterState.searchText}` : ""}
+        ) : hasSearch ? (
+          <Text>
+            <Text dimColor>/</Text>
+            <Text color="yellow"> {filterState.searchText}</Text>
           </Text>
+        ) : (
+          <Text dimColor>/ search</Text>
         )}
       </Box>
-      <Box>
-        <Text dimColor>[{appleLabel}]</Text>
-        {healthLabel && (
-          <Text dimColor> [{healthLabel}]</Text>
+      <Box gap={0}>
+        <Badge
+          label={filterState.showAppleServices ? "apple: on" : "apple: off"}
+          active={filterState.showAppleServices}
+        />
+        {filterState.healthFilter !== "all" && (
+          <Badge label={`health: ${filterState.healthFilter}`} active />
         )}
-        {sourceLabel && (
-          <Text dimColor> [{sourceLabel}]</Text>
+        {filterState.sourceFilter !== "all" && (
+          <Badge label={`source: ${filterState.sourceFilter}`} active />
         )}
       </Box>
     </Box>

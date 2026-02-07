@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useStdout } from "ink";
 
 export function Header({
   jobCount,
@@ -10,18 +10,26 @@ export function Header({
   runningCount: number;
   errorCount: number;
 }) {
-  const parts: string[] = [];
-  if (runningCount > 0) parts.push(`${runningCount} running`);
-  if (errorCount > 0) parts.push(`${errorCount} error`);
-  const stats =
-    parts.length > 0
-      ? `${jobCount} jobs (${parts.join(", ")})`
-      : `${jobCount} jobs`;
+  const { stdout } = useStdout();
+  const width = stdout.columns ?? 80;
 
   return (
-    <Box justifyContent="space-between">
-      <Text bold> Gantry</Text>
-      <Text dimColor>{stats}</Text>
+    <Box flexDirection="column">
+      <Box justifyContent="space-between">
+        <Text bold color="cyan">
+          {" \u2693 Gantry "}
+        </Text>
+        <Box gap={1}>
+          <Text dimColor>{jobCount} jobs</Text>
+          {runningCount > 0 && (
+            <Text color="green">{runningCount} running</Text>
+          )}
+          {errorCount > 0 && (
+            <Text color="red">{errorCount} errored</Text>
+          )}
+        </Box>
+      </Box>
+      <Text dimColor>{"\u2500".repeat(width)}</Text>
     </Box>
   );
 }

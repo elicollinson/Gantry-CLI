@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Box, Text, useInput, useStdout } from "ink";
 import { Spinner } from "@inkjs/ui";
 
-const LOG_RESERVED_LINES = 4; // path line + line count indicator + padding
+const LOG_RESERVED_LINES = 14; // header + status + program + schedule + section headers + footer
 
 export function LogViewer({
   content,
@@ -16,17 +16,17 @@ export function LogViewer({
   const { stdout } = useStdout();
   const termHeight = stdout.rows ?? 24;
 
-  // Allow roughly half the terminal for log display
-  const maxLogLines = Math.max(5, Math.floor(termHeight / 2) - LOG_RESERVED_LINES);
+  const maxLogLines = Math.max(3, termHeight - LOG_RESERVED_LINES);
 
   const lines = useMemo(() => {
     if (!content) return [];
-    return content.split("\n");
+    return content.split("\n").filter((l) => l.length > 0);
   }, [content]);
 
-  const [scrollOffset, setScrollOffset] = useState(0);
+  const [scrollOffset, setScrollOffset] = useState(() =>
+    Math.max(0, lines.length - maxLogLines)
+  );
 
-  // Clamp the scroll offset to valid range
   const maxOffset = Math.max(0, lines.length - maxLogLines);
   const clampedOffset = Math.min(scrollOffset, maxOffset);
 
@@ -47,29 +47,39 @@ export function LogViewer({
     );
   }
 
-  if (!content) {
+  if (!content || lines.length === 0) {
     return (
       <Box paddingLeft={1}>
-        <Text dimColor>No log output</Text>
+        <Text dimColor italic>No log output</Text>
       </Box>
     );
   }
 
   const visibleLines = lines.slice(clampedOffset, clampedOffset + maxLogLines);
+  const hasAbove = clampedOffset > 0;
+  const hasBelow = clampedOffset + maxLogLines < lines.length;
 
   return (
-    <Box flexDirection="column" paddingLeft={1}>
-      {path && <Text dimColor>{path}</Text>}
-      <Text dimColor>
-        (showing {Math.min(maxLogLines, lines.length)} of {lines.length} lines)
-      </Text>
-      <Box flexDirection="column" marginTop={1}>
+    <Box flexDirection="column">
+      <Box gap={2}>
+        {path && <Text dimColor>{path}</Text>}
+        <Text dimColor>
+          ({lines.length} lines)
+        </Text>
+      </Box>
+      {hasAbove && (
+        <Text dimColor>{" \u25B4 "}{clampedOffset} lines above</Text>
+      )}
+      <Box flexDirection="column">
         {visibleLines.map((line, i) => (
-          <Text key={clampedOffset + i} dimColor>
+          <Text key={clampedOffset + i} dimColor wrap="truncate">
             {line}
           </Text>
         ))}
       </Box>
+      {hasBelow && (
+        <Text dimColor>{" \u25BE "}{lines.length - clampedOffset - maxLogLines} lines below</Text>
+      )}
     </Box>
   );
 }

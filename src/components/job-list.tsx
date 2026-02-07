@@ -3,7 +3,7 @@ import { Box, Text, useStdout } from "ink";
 import type { LaunchJob } from "../types.ts";
 import { JobRow, type ColumnWidths } from "./job-row.tsx";
 
-const RESERVED_LINES = 6; // header + filter bar + column header + footer + borders
+const RESERVED_LINES = 8; // header(2) + filter + col header + separator + footer(2) + scroll indicators
 
 export function JobList({
   jobs,
@@ -20,29 +20,21 @@ export function JobList({
 
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  // Keep selected item visible within the viewport
   useEffect(() => {
     setScrollOffset((prev) => {
-      if (selectedIndex < prev) {
-        return selectedIndex;
-      }
-      if (selectedIndex >= prev + visibleRows) {
-        return selectedIndex - visibleRows + 1;
-      }
+      if (selectedIndex < prev) return selectedIndex;
+      if (selectedIndex >= prev + visibleRows) return selectedIndex - visibleRows + 1;
       return prev;
     });
   }, [selectedIndex, visibleRows]);
 
   const columns: ColumnWidths = useMemo(() => {
     const status = 5;
-    const schedule = 20;
+    const schedule = 22;
     const nextRun = 14;
-    const exit = 14;
-    const prefix = 2; // "> " prefix
-    const label = Math.max(
-      10,
-      termWidth - status - schedule - nextRun - exit - prefix
-    );
+    const exit = 12;
+    const prefix = 2;
+    const label = Math.max(10, termWidth - status - schedule - nextRun - exit - prefix);
     return { status, label, schedule, nextRun, exit };
   }, [termWidth]);
 
@@ -52,8 +44,8 @@ export function JobList({
 
   if (jobs.length === 0) {
     return (
-      <Box paddingLeft={1} paddingTop={1}>
-        <Text dimColor>No jobs match the current filters.</Text>
+      <Box paddingLeft={2} paddingTop={1}>
+        <Text dimColor italic>No jobs match the current filters.</Text>
       </Box>
     );
   }
@@ -62,37 +54,27 @@ export function JobList({
     <Box flexDirection="column">
       {/* Column headers */}
       <Box>
-        <Text>  </Text>
+        <Text dimColor>{"  "}</Text>
         <Box width={columns.status}>
-          <Text bold dimColor>
-            ST
-          </Text>
+          <Text dimColor bold>{" "}</Text>
         </Box>
         <Box width={columns.label}>
-          <Text bold dimColor>
-            LABEL
-          </Text>
+          <Text dimColor bold>LABEL</Text>
         </Box>
         <Box width={columns.schedule}>
-          <Text bold dimColor>
-            SCHEDULE
-          </Text>
+          <Text dimColor bold>SCHEDULE</Text>
         </Box>
         <Box width={columns.nextRun}>
-          <Text bold dimColor>
-            NEXT RUN
-          </Text>
+          <Text dimColor bold>NEXT RUN</Text>
         </Box>
         <Box width={columns.exit}>
-          <Text bold dimColor>
-            EXIT
-          </Text>
+          <Text dimColor bold>STATUS</Text>
         </Box>
       </Box>
 
       {/* Scroll indicator above */}
       {hasAbove && (
-        <Text dimColor>  {"\u25B2"} {scrollOffset} more above</Text>
+        <Text dimColor>{"  \u25B4 "}{scrollOffset} more</Text>
       )}
 
       {/* Visible job rows */}
@@ -107,9 +89,7 @@ export function JobList({
 
       {/* Scroll indicator below */}
       {hasBelow && (
-        <Text dimColor>
-          {"  \u25BC"} {jobs.length - scrollOffset - visibleRows} more below
-        </Text>
+        <Text dimColor>{"  \u25BE "}{jobs.length - scrollOffset - visibleRows} more</Text>
       )}
     </Box>
   );

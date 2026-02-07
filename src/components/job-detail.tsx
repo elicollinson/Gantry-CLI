@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Text } from "ink";
+import { Box, Text, useStdout } from "ink";
 import type { LaunchJob } from "../types.ts";
 import { useJobDetail } from "../hooks/use-job-detail.ts";
 import { StatusBadge } from "./status-badge.tsx";
@@ -7,8 +7,29 @@ import { LogViewer } from "./log-viewer.tsx";
 import { formatRelativeTime } from "../utils/format.ts";
 import { interpretExitCode } from "../utils/signal-names.ts";
 
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Box marginTop={1}>
+      <Text bold color="cyan">{"\u2500\u2500 "}{title}{" "}</Text>
+    </Box>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Box>
+      <Box width={14}>
+        <Text dimColor>{label}</Text>
+      </Box>
+      <Box flexShrink={1}>{children}</Box>
+    </Box>
+  );
+}
+
 export function JobDetail({ job }: { job: LaunchJob }) {
   const { printInfo, logContent, loading } = useJobDetail(job.label);
+  const { stdout } = useStdout();
+  const width = stdout.columns ?? 80;
 
   const exitMeaning = printInfo
     ? interpretExitCode(printInfo.lastExitCode)
@@ -24,98 +45,71 @@ export function JobDetail({ job }: { job: LaunchJob }) {
     job.logPaths.stdout ??
     job.logPaths.stderr;
 
-  const hasLogs = Boolean(logPath);
+  const exitColor =
+    job.lastExitCode === 0
+      ? "green"
+      : job.lastExitCode !== null
+        ? "red"
+        : undefined;
 
   return (
     <Box flexDirection="column" paddingLeft={1} paddingRight={1}>
-      {/* Identity */}
-      <Box marginBottom={1} flexDirection="column">
-        <Text bold color="cyan">
-          Identity
-        </Text>
-        <Text>
-          <Text dimColor>Label: </Text>
-          {job.label}
-        </Text>
-        <Text>
-          <Text dimColor>Source: </Text>
-          {job.source}
-        </Text>
-        <Text>
-          <Text dimColor>Plist: </Text>
-          {job.plistPath}
-        </Text>
+      {/* Title */}
+      <Box marginBottom={0}>
+        <Text bold>{job.label}</Text>
+        <Text dimColor> ({job.source})</Text>
       </Box>
+      <Text dimColor>{job.plistPath}</Text>
 
-      {/* Status */}
-      <Box marginBottom={1} flexDirection="column">
-        <Text bold color="cyan">
-          Status
+      {/* Status Section */}
+      <SectionHeader title="Status" />
+      <Field label="Health">
+        <StatusBadge health={job.health} isRunning={job.isRunning} />
+        <Text> {job.health}</Text>
+      </Field>
+      <Field label="Running">
+        <Text color={job.isRunning ? "green" : undefined}>
+          {job.isRunning ? `Yes (PID ${job.pid})` : "No"}
         </Text>
-        <Box>
-          <Text dimColor>Health: </Text>
-          <StatusBadge health={job.health} isRunning={job.isRunning} />
-          <Text> {job.health}</Text>
-        </Box>
-        <Text>
-          <Text dimColor>Running: </Text>
-          {job.isRunning ? "Yes" : "No"}
-          {job.pid != null && <Text> (PID {job.pid})</Text>}
-        </Text>
-        <Text>
-          <Text dimColor>Exit: </Text>
-          <Text color={job.lastExitCode && job.lastExitCode !== 0 ? "red" : undefined}>
-            {exitMeaning}
-          </Text>
-        </Text>
-        {printInfo && (
-          <Text>
-            <Text dimColor>Runs: </Text>
-            {printInfo.runs}
-          </Text>
-        )}
-      </Box>
+      </Field>
+      <Field label="Exit Code">
+        <Text color={exitColor}>{exitMeaning}</Text>
+      </Field>
+      {printInfo && (
+        <Field label="Total Runs">
+          <Text>{printInfo.runs}</Text>
+        </Field>
+      )}
 
-      {/* Program */}
-      <Box marginBottom={1} flexDirection="column">
-        <Text bold color="cyan">
-          Program
-        </Text>
+      {/* Program Section */}
+      <SectionHeader title="Program" />
+      <Box paddingLeft={0}>
         <Text wrap="wrap">{fullCommand}</Text>
       </Box>
 
-      {/* Schedule */}
-      <Box marginBottom={1} flexDirection="column">
-        <Text bold color="cyan">
-          Schedule
-        </Text>
-        <Text>
-          <Text dimColor>Type: </Text>
-          {job.schedule.type}
-        </Text>
-        <Text>
-          <Text dimColor>Description: </Text>
-          {job.schedule.humanReadable}
-        </Text>
-        <Text>
-          <Text dimColor>Next run: </Text>
+      {/* Schedule Section */}
+      <SectionHeader title="Schedule" />
+      <Field label="Type">
+        <Text>{job.schedule.type}</Text>
+      </Field>
+      <Field label="Schedule">
+        <Text color="cyan">{job.schedule.humanReadable}</Text>
+      </Field>
+      <Field label="Next Run">
+        <Text color={job.schedule.nextRun ? "yellow" : undefined}>
           {job.schedule.nextRun
-            ? formatRelativeTime(job.schedule.nextRun)
-            : "-"}
+            ? `${formatRelativeTime(job.schedule.nextRun)}  (${job.schedule.nextRun.toLocaleString()})`
+            : "\u2014"}
         </Text>
-      </Box>
+      </Field>
 
-      {/* Logs */}
-      <Box flexDirection="column">
-        <Text bold color="cyan">
-          Logs
-        </Text>
-        {hasLogs ? (
-          <LogViewer content={logContent} path={logPath} loading={loading} />
-        ) : (
-          <Text dimColor> No log files configured</Text>
-        )}
-      </Box>
+      {/* Logs Section */}
+      <SectionHeader title="Logs" />
+      {logPath ? (
+        <LogViewer content={logContent} path={logPath} loading={loading} />
+      ) : (
+        <Text dimColor italic> No log files configured</Text>
+      )}
     </Box>
   );
 }
